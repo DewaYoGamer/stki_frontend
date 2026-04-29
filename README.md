@@ -1,16 +1,49 @@
-# React + Vite
+# Retrieval App Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend ini dibuat untuk alur pencarian dan tanya jawab dokumentasi aplikasi berbasis:
 
-Currently, two official plugins are available:
+- BM25 retrieval
+- Semantic retrieval
+- Hybrid retrieval
+- RAG ke LLM (Ollama atau OpenAI)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Jalankan Project
 
-## React Compiler
+```bash
+npm install
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Fitur Utama
 
-## Expanding the ESLint configuration
+- Dashboard pencarian dengan mode source:
+  - Demo Lokal (langsung jalan tanpa backend)
+  - Backend API (siap dihubungkan ke service Python)
+- Input query + quick query chips
+- Kontrol top-k hasil
+- Upload PDF (untuk mode backend)
+- Tampilkan hasil chunk (BAB/Pasal/Ayat) dengan skor
+- Tampilkan hasil chunk (Dokumen/Bagian/Segmen) dengan skor
+- Tampilkan jawaban LLM + referensi chunk
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Integrasi Backend
+
+Frontend akan mencoba endpoint berikut secara fallback:
+
+- Search: `/api/search`, `/search`, `/api/retrieve`
+- RAG/LLM: `/api/ask`, `/ask`, `/api/rag`
+- Upload: `/api/upload`, `/upload`, `/api/documents`
+
+Pastikan backend mengembalikan struktur data JSON yang memuat hasil chunk pada salah satu field:
+
+- `results`
+- `data`
+- `items`
+- `context`
+
+## Build Produksi
+
+```bash
+npm run build
+npm run preview
+```
