@@ -45,6 +45,7 @@ function App() {
   const [openAiKey, setOpenAiKey] = useState('')
 
   const [loading, setLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [engineNote, setEngineNote] = useState('Belum ada proses pencarian.')
 
@@ -75,6 +76,7 @@ function App() {
       return
     }
 
+    setLoadingMessage('Load dokumen...')
     setLoading(true)
     setErrorMessage('')
 
@@ -85,6 +87,10 @@ function App() {
       })
 
       setUploadMessage(response.message)
+      setEngineNote('Dokumen telah berhasil di-load. Silakan jalankan pencarian.')
+      setResults([])
+      setReferences([])
+      setAnswerText('')
     } catch (error) {
       setUploadMessage('')
       setErrorMessage(error.message)
@@ -102,6 +108,7 @@ function App() {
       return
     }
 
+    setLoadingMessage('Menyusun jawaban...')
     setLoading(true)
     setErrorMessage('')
     setResults([])
@@ -320,55 +327,64 @@ function App() {
 
           {errorMessage && <div className="error-box">{errorMessage}</div>}
 
-          {llmMode && (
-            <article className="answer-card">
-              <h3>Jawaban LLM</h3>
-              <p className="answer-text">{answerText || 'Belum ada jawaban.'}</p>
-            </article>
-          )}
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>{loadingMessage || 'Sedang memproses...'}</p>
+            </div>
+          ) : (
+            <>
+              {llmMode && (
+                <article className="answer-card">
+                  <h3>Jawaban LLM</h3>
+                  <p className="answer-text">{answerText || 'Belum ada jawaban.'}</p>
+                </article>
+              )}
 
-          <article className="summary-card">
-            <p>
-              Total referensi tampil: <strong>{visibleRows.length}</strong>
-            </p>
-            <p>
-              Top result:{' '}
-              <strong>
-                {topRow ? `${topRow.pasal} ${topRow.ayat}` : 'Belum tersedia'}
-              </strong>
-            </p>
-          </article>
-
-          <div className="result-list">
-            {visibleRows.length === 0 && (
-              <div className="empty-state">
-                Jalankan query untuk melihat daftar chunk yang relevan.
-              </div>
-            )}
-
-            {visibleRows.map((row) => (
-              <article key={row.chunk_id} className="result-item">
-                <header>
-                  <h3>
-                    {row.pasal} <span>{row.ayat}</span>
-                  </h3>
-                  <p>{scoreToPercent(row)}%</p>
-                </header>
-                <p className="location">{row.bab}</p>
-                <p className="snippet">{row.text}</p>
-                <div className="score-meter" aria-hidden="true">
-                  <span style={{ width: `${scoreToPercent(row)}%` }} />
-                </div>
-
-                {(row.bm25_score_norm > 0 || row.semantic_score_norm > 0) && (
-                  <p className="small-metric">
-                    BM25 {row.bm25_score_norm.toFixed(2)} | Semantic{' '}
-                    {row.semantic_score_norm.toFixed(2)}
-                  </p>
-                )}
+              <article className="summary-card">
+                <p>
+                  Total referensi tampil: <strong>{visibleRows.length}</strong>
+                </p>
+                <p>
+                  Top result:{' '}
+                  <strong>
+                    {topRow ? `${topRow.pasal} ${topRow.ayat}` : 'Belum tersedia'}
+                  </strong>
+                </p>
               </article>
-            ))}
-          </div>
+
+              <div className="result-list">
+                {visibleRows.length === 0 && (
+                  <div className="empty-state">
+                    Jalankan query untuk melihat daftar chunk yang relevan.
+                  </div>
+                )}
+
+                {visibleRows.map((row) => (
+                  <article key={row.chunk_id} className="result-item">
+                    <header>
+                      <h3>
+                        {row.pasal} <span>{row.ayat}</span>
+                      </h3>
+                      <p>{scoreToPercent(row)}%</p>
+                    </header>
+                    <p className="location">{row.bab}</p>
+                    <p className="snippet">{row.text}</p>
+                    <div className="score-meter" aria-hidden="true">
+                      <span style={{ width: `${scoreToPercent(row)}%` }} />
+                    </div>
+
+                    {(row.bm25_score_norm > 0 || row.semantic_score_norm > 0) && (
+                      <p className="small-metric">
+                        BM25 {row.bm25_score_norm.toFixed(2)} | Semantic{' '}
+                        {row.semantic_score_norm.toFixed(2)}
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
         </section>
       </main>
     </div>

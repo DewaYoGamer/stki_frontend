@@ -316,3 +316,35 @@ textarea:focus {
     padding: 1.25rem;
   }
 }
+
+/* Loading Animation */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 0;
+  gap: 1.2rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(14, 122, 100, 0.2);
+  border-top-color: var(--accent-main);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-container p {
+  color: var(--text-main);
+  font-weight: 600;
+  margin: 0;
+  font-size: 1.05rem;
+}
