@@ -29,9 +29,149 @@ function Sep() {
   return <div className="border-t border-black/[0.07] dark:border-white/[0.07] my-5" />
 }
 
+/* ── Document status banner ── */
+function DocumentStatus({ docStatus, selectedPdf, uploadMessage }) {
+  const isSuccess = uploadMessage && !uploadMessage.startsWith('Upload gagal')
+
+  // Currently uploading or just uploaded
+  if (isSuccess && selectedPdf) {
+    return (
+      <div className="rounded-xl border border-[#0e7a64]/20 dark:border-[#0e7a64]/25 bg-[#0e7a64]/[0.06] dark:bg-[#0e7a64]/[0.08] p-3 mb-1">
+        <div className="flex items-center gap-2 mb-1.5">
+          <svg className="w-4 h-4 text-[#0e7a64] dark:text-[#4ecba5] shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+          </svg>
+          <span className="text-[0.72rem] font-bold text-[#0e7a64] dark:text-[#4ecba5]">Dokumen Aktif</span>
+        </div>
+        <p className="text-[0.7rem] font-semibold text-black/60 dark:text-white/55 m-0 truncate pl-6">
+          {selectedPdf.name}
+        </p>
+        {docStatus.chunksCount > 0 && (
+          <p className="text-[0.6rem] text-black/30 dark:text-white/22 m-0 mt-1 pl-6">
+            {docStatus.chunksCount} chunks terindex
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  // Backend already has documents loaded (from previous session or startup)
+  if (docStatus.loaded && docStatus.chunksCount > 0) {
+    return (
+      <div className="rounded-xl border border-[#0e7a64]/20 dark:border-[#0e7a64]/25 bg-[#0e7a64]/[0.06] dark:bg-[#0e7a64]/[0.08] p-3 mb-1">
+        <div className="flex items-center gap-2 mb-1.5">
+          <svg className="w-4 h-4 text-[#0e7a64] dark:text-[#4ecba5] shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+          </svg>
+          <span className="text-[0.72rem] font-bold text-[#0e7a64] dark:text-[#4ecba5]">Dokumen Tersedia</span>
+        </div>
+        <p className="text-[0.6rem] text-black/30 dark:text-white/22 m-0 pl-6">
+          {docStatus.chunksCount} chunks terindex di server
+        </p>
+        <p className="text-[0.58rem] text-black/22 dark:text-white/15 m-0 mt-1 pl-6">
+          Upload file baru untuk mengganti dokumen
+        </p>
+      </div>
+    )
+  }
+
+  // Checking status
+  if (docStatus.checking) {
+    return (
+      <div className="rounded-xl border border-black/[0.07] dark:border-white/[0.07] bg-black/[0.02] dark:bg-white/[0.02] p-3 mb-1">
+        <div className="flex items-center gap-2">
+          <span className="w-4 h-4 rounded-full border-2 border-black/10 dark:border-white/10 border-t-black/40 dark:border-t-white/40 animate-spin shrink-0" />
+          <span className="text-[0.68rem] font-semibold text-black/35 dark:text-white/30">
+            Mengecek status dokumen...
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // No documents loaded
+  return (
+    <div className="rounded-xl border border-red-200 dark:border-red-800/30 bg-red-50 dark:bg-red-950/20 p-3 mb-1">
+      <div className="flex items-center gap-2 mb-1">
+        <svg className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+        </svg>
+        <span className="text-[0.72rem] font-bold text-red-600 dark:text-red-400">Belum Ada Dokumen</span>
+      </div>
+      <p className="text-[0.62rem] text-red-500/70 dark:text-red-400/60 m-0 pl-6 leading-relaxed">
+        Upload file PDF terlebih dahulu agar sistem dapat melakukan pencarian dan menjawab pertanyaan Anda.
+      </p>
+    </div>
+  )
+}
+
+/* ── Informational card for API key section ── */
+function ApiKeyInfoCard() {
+  return (
+    <div className="rounded-xl border border-black/[0.07] dark:border-white/[0.07] bg-black/[0.02] dark:bg-white/[0.02] p-3 mb-3">
+      <div className="flex items-start gap-2 mb-2">
+        <svg className="w-3.5 h-3.5 text-[#0e7a64] dark:text-[#4ecba5] shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+        </svg>
+        <p className="text-[0.7rem] font-bold text-black/60 dark:text-white/55 m-0">
+          Cara Menggunakan API Key
+        </p>
+      </div>
+      <ul className="text-[0.65rem] text-black/45 dark:text-white/35 m-0 pl-5 space-y-1.5 leading-relaxed">
+        <li>
+          <span className="font-semibold text-black/55 dark:text-white/45">Sudah ada di server?</span>
+          {' '}Kosongkan field ini. Backend sudah dikonfigurasi oleh admin.
+        </li>
+        <li>
+          <span className="font-semibold text-black/55 dark:text-white/45">Punya key sendiri?</span>
+          {' '}Isi di bawah untuk mengganti key default server.
+        </li>
+        <li>
+          <span className="font-semibold text-black/55 dark:text-white/45">Belum punya?</span>
+          {' '}Daftar di{' '}
+          <a
+            href="https://platform.openai.com/api-keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#0e7a64] dark:text-[#4ecba5] underline underline-offset-2 hover:text-[#0c6b58] dark:hover:text-[#7be0c0] transition-colors"
+          >
+            platform.openai.com
+          </a>
+        </li>
+      </ul>
+    </div>
+  )
+}
+
+/* ── API Key status indicator ── */
+function ApiKeyStatus({ apiKey }) {
+  if (apiKey.trim()) {
+    return (
+      <div className="flex items-center gap-1.5 mt-1.5">
+        <svg className="w-3 h-3 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+        </svg>
+        <span className="text-[0.62rem] font-semibold text-emerald-600 dark:text-emerald-400">
+          API key kustom aktif — akan mengganti key server
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 mt-1.5">
+      <svg className="w-3 h-3 text-black/25 dark:text-white/20" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
+      </svg>
+      <span className="text-[0.62rem] font-medium text-black/30 dark:text-white/22">
+        Menggunakan key dari konfigurasi server
+      </span>
+    </div>
+  )
+}
+
 export function SettingsSidebar({
   open, onClose,
-  backendUrl, setBackendUrl,
   selectedPdf,
   uploading,
   uploadMessage,
@@ -40,6 +180,7 @@ export function SettingsSidebar({
   openAiKey, setOpenAiKey,
   topK, setTopK,
   loading,
+  docStatus,
 }) {
   const [dragging, setDragging] = useState(false)
 
@@ -65,7 +206,8 @@ export function SettingsSidebar({
     e.target.value = ''
   }
 
-  const isSuccess = uploadMessage && !uploadMessage.startsWith('Upload gagal')
+  const isUploadSuccess = uploadMessage && !uploadMessage.startsWith('Upload gagal')
+  const showApiKeySection = searchMode === 'llm-openai'
 
   return (
     <>
@@ -111,22 +253,14 @@ export function SettingsSidebar({
         {/* Scrollable settings */}
         <div className="flex-1 overflow-y-auto px-5 py-5">
 
-          <Tag>Konfigurasi Backend</Tag>
+          <Tag>Dokumen</Tag>
 
-          <div className="mb-4">
-            <Lbl htmlFor="s-url">URL Backend</Lbl>
-            <input
-              id="s-url"
-              className={inp}
-              value={backendUrl}
-              onChange={(e) => setBackendUrl(e.target.value)}
-              placeholder="http://127.0.0.1:8000"
-            />
-          </div>
+          {/* Document status banner */}
+          <DocumentStatus docStatus={docStatus} selectedPdf={selectedPdf} uploadMessage={uploadMessage} />
 
           {/* Drop zone */}
-          <div className="mb-1">
-            <Lbl>Dokumen PDF</Lbl>
+          <div className="mb-1 mt-3">
+            <Lbl>{docStatus.loaded ? 'Upload Dokumen Baru' : 'Upload Dokumen PDF'}</Lbl>
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -172,16 +306,6 @@ export function SettingsSidebar({
                       Lepaskan untuk upload
                     </p>
                   </>
-                ) : selectedPdf ? (
-                  <>
-                    <svg className="w-5 h-5 text-[#0e7a64]/55 dark:text-[#4ecba5]/60 mx-auto mb-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                    </svg>
-                    <p className="text-[0.72rem] font-semibold text-black/60 dark:text-white/60 mb-0 truncate px-2">
-                      {selectedPdf.name}
-                    </p>
-                    <p className="text-[0.62rem] text-black/28 dark:text-white/25 mt-0.5 m-0">Klik untuk ganti</p>
-                  </>
                 ) : (
                   <>
                     <svg className="w-5 h-5 text-black/22 dark:text-white/20 mx-auto mb-2" viewBox="0 0 20 20" fill="currentColor">
@@ -196,12 +320,12 @@ export function SettingsSidebar({
 
           {uploadMessage && !uploading && (
             <div className={`mt-2.5 flex items-start gap-2 text-[0.72rem] font-semibold rounded-xl px-3 py-2.5 ${
-              isSuccess
+              isUploadSuccess
                 ? 'text-[#0e7a64] dark:text-[#4ecba5] bg-[#0e7a64]/8 dark:bg-[#0e7a64]/10 border border-[#0e7a64]/18 dark:border-[#0e7a64]/20'
                 : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30'
             }`}>
               <svg className="w-3.5 h-3.5 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                {isSuccess
+                {isUploadSuccess
                   ? <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
                   : <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
                 }
@@ -230,17 +354,20 @@ export function SettingsSidebar({
             </select>
           </div>
 
-          {searchMode === 'llm-openai' && (
+          {/* ── OpenAI API Key Section ── */}
+          {showApiKeySection && (
             <div className="mb-3.5">
               <Lbl htmlFor="s-key">OpenAI API Key</Lbl>
+              <ApiKeyInfoCard />
               <input
                 id="s-key"
                 type="password"
                 className={inp}
                 value={openAiKey}
                 onChange={(e) => setOpenAiKey(e.target.value)}
-                placeholder="sk-..."
+                placeholder="Opsional — kosongkan jika server sudah dikonfigurasi"
               />
+              <ApiKeyStatus apiKey={openAiKey} />
             </div>
           )}
 

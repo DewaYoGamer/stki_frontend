@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { runBackendRagAnswer, runBackendSearch, uploadPdfToBackend } from './lib/ragApi'
+import { runBackendRagAnswer, runBackendSearch, uploadPdfToBackend, checkBackendHealth } from './lib/ragApi'
 import { ChatArea } from './components/ChatArea'
 import { SettingsSidebar } from './components/SettingsSidebar'
 import { SplashScreen } from './components/SplashScreen'
@@ -34,13 +34,20 @@ function App() {
   }
 
   /* Settings */
-  const [backendUrl, setBackendUrl] = useState('http://127.0.0.1:8000')
+  const backendUrl = import.meta.env.VITE_API_BASE_URL || ''
   const [selectedPdf, setSelectedPdf] = useState(null)
   const [uploadMessage, setUploadMessage] = useState('')
   const [uploading, setUploading] = useState(false)
   const [searchMode, setSearchMode] = useState('hybrid')
   const [topK, setTopK] = useState(5)
   const [openAiKey, setOpenAiKey] = useState('')
+
+  /* Document status from backend */
+  const [docStatus, setDocStatus] = useState({
+    loaded: false,
+    chunksCount: 0,
+    checking: true,
+  })
 
   /* Chat */
   const [chatHistory, setChatHistory] = useState([])
@@ -52,6 +59,23 @@ function App() {
   const llmMode = searchMode === 'llm-ollama' || searchMode === 'llm-openai'
   const provider = searchMode === 'llm-openai' ? 'openai' : 'ollama'
 
+  /* Check backend health on mount to detect if documents are already loaded */
+  useEffect(() => {
+    async function checkStatus() {
+      const health = await checkBackendHealth(backendUrl)
+      if (health) {
+        setDocStatus({
+          loaded: health.index_loaded,
+          chunksCount: health.chunks_count,
+          checking: false,
+        })
+      } else {
+        setDocStatus((prev) => ({ ...prev, checking: false }))
+      }
+    }
+    checkStatus()
+  }, [backendUrl])
+
   async function handleFileSelect(file) {
     if (!file) return
     setSelectedPdf(file)
@@ -60,6 +84,15 @@ function App() {
     try {
       const res = await uploadPdfToBackend({ baseUrl: backendUrl, file })
       setUploadMessage(res.message)
+      // Refresh document status after upload
+      const health = await checkBackendHealth(backendUrl)
+      if (health) {
+        setDocStatus({
+          loaded: health.index_loaded,
+          chunksCount: health.chunks_count,
+          checking: false,
+        })
+      }
     } catch (err) {
       setUploadMessage('Upload gagal: ' + err.message)
     } finally {
@@ -86,9 +119,6 @@ function App() {
 
     try {
       if (isLlm) {
-        if (prov === 'openai' && !openAiKey.trim()) {
-          throw new Error('API key OpenAI wajib diisi untuk mode backend OpenAI.')
-        }
         const payload = await runBackendRagAnswer({
           baseUrl: backendUrl,
           query: trimmedQuery,
@@ -133,8 +163,6 @@ function App() {
       <SettingsSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        backendUrl={backendUrl}
-        setBackendUrl={setBackendUrl}
         selectedPdf={selectedPdf}
         uploading={uploading}
         uploadMessage={uploadMessage}
@@ -146,6 +174,7 @@ function App() {
         topK={topK}
         setTopK={setTopK}
         loading={loading}
+        docStatus={docStatus}
       />
       <ChatArea
         chatHistory={chatHistory}
@@ -153,6 +182,7 @@ function App() {
         setQuery={setQuery}
         loading={loading}
         searchMode={searchMode}
+        setSearchMode={setSearchMode}
         llmMode={llmMode}
         onSubmit={handleSearch}
         onToggleSidebar={() => setSidebarOpen((v) => !v)}

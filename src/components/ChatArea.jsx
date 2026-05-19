@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { SEARCH_OPTIONS, scoreToPercent } from '../lib/utils'
 
 const EASING = 'cubic-bezier(0.16, 1, 0.3, 1)'
@@ -294,7 +294,72 @@ function EmptyState({ onSuggest, ready }) {
   )
 }
 
-export function ChatArea({ chatHistory, query, setQuery, loading, searchMode, onSubmit, onToggleSidebar, isDark, onToggleTheme, splashDone }) {
+function ModeSelector({ searchMode, setSearchMode }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  const modeLabel = SEARCH_OPTIONS.find((o) => o.value === searchMode)?.label ?? searchMode
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center gap-1.5 text-[0.65rem] font-semibold px-2.5 py-1 rounded-lg transition-all duration-200 cursor-pointer select-none
+          ${open
+            ? 'text-[#0e7a64] dark:text-[#4ecba5] bg-[#0e7a64]/10 dark:bg-[#0e7a64]/15 border border-[#0e7a64]/25 dark:border-[#0e7a64]/25'
+            : 'text-black/38 dark:text-white/25 bg-black/[0.05] dark:bg-white/[0.04] border border-black/[0.07] dark:border-white/[0.07] hover:text-black/55 dark:hover:text-white/40 hover:bg-black/[0.08] dark:hover:bg-white/[0.07] hover:border-black/[0.12] dark:hover:border-white/[0.12]'
+          }`}
+      >
+        {modeLabel}
+        <svg className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div
+          className="absolute bottom-full left-0 mb-2 w-52 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#1c1c1c] shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden z-50"
+          style={{ animation: `scaleIn 0.15s ${EASING} both` }}
+        >
+          <div className="py-1.5">
+            {SEARCH_OPTIONS.map((o) => {
+              const active = o.value === searchMode
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => { setSearchMode(o.value); setOpen(false) }}
+                  className={`w-full text-left px-3.5 py-2 text-[0.75rem] font-medium transition-all duration-150 flex items-center gap-2.5
+                    ${active
+                      ? 'text-[#0e7a64] dark:text-[#4ecba5] bg-[#0e7a64]/[0.07] dark:bg-[#0e7a64]/[0.1]'
+                      : 'text-black/60 dark:text-white/55 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] hover:text-black/80 dark:hover:text-white/75'
+                    }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active ? 'bg-[#0e7a64] dark:bg-[#4ecba5]' : 'bg-black/10 dark:bg-white/10'}`} />
+                  {o.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function ChatArea({ chatHistory, query, setQuery, loading, searchMode, setSearchMode, onSubmit, onToggleSidebar, isDark, onToggleTheme, splashDone }) {
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
 
@@ -395,9 +460,7 @@ export function ChatArea({ chatHistory, query, setQuery, loading, searchMode, on
               />
               <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-black/[0.06] dark:border-white/[0.06]">
                 <div className="flex items-center gap-2">
-                  <span className="text-[0.65rem] font-semibold text-black/38 dark:text-white/25 bg-black/[0.05] dark:bg-white/[0.04] border border-black/[0.07] dark:border-white/[0.07] px-2.5 py-1 rounded-lg">
-                    {modeLabel}
-                  </span>
+                  <ModeSelector searchMode={searchMode} setSearchMode={setSearchMode} />
                   <span className="text-[0.6rem] text-black/22 dark:text-white/15 hidden sm:block">
                     Shift+Enter untuk baris baru
                   </span>

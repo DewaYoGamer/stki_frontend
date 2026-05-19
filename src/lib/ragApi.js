@@ -1,6 +1,28 @@
-const SEARCH_ENDPOINTS = ['/api/search', '/search', '/api/retrieve']
-const LLM_ENDPOINTS = ['/api/ask', '/ask', '/api/rag']
-const UPLOAD_ENDPOINTS = ['/api/upload', '/upload', '/api/documents']
+/**
+ * RAG API Client — handles communication with the STKI backend.
+ * Base URL is configured via VITE_API_BASE_URL env variable.
+ */
+
+const SEARCH_ENDPOINTS = ['/api/search', '/search']
+const LLM_ENDPOINTS = ['/api/ask', '/ask']
+const UPLOAD_ENDPOINTS = ['/api/upload', '/upload']
+
+/**
+ * Get the base URL for API requests.
+ * In development with Vite proxy, we use '' (empty) so requests go to /api/* on the same origin.
+ * In production or when explicitly set, use the configured URL.
+ */
+function getBaseUrl(overrideUrl) {
+  if (overrideUrl && overrideUrl.trim()) {
+    return normalizeBaseUrl(overrideUrl)
+  }
+
+  // In dev mode with Vite proxy, use relative URLs (empty base)
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  if (!envUrl) return ''
+
+  return normalizeBaseUrl(envUrl)
+}
 
 function normalizeBaseUrl(baseUrl) {
   return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
@@ -23,14 +45,14 @@ async function requestWithFallback(baseUrl, endpoints, config) {
   const errors = []
 
   for (const endpoint of endpoints) {
-    const url = `${normalizeBaseUrl(baseUrl)}${endpoint}`
+    const url = `${baseUrl}${endpoint}`
 
     try {
       const response = await fetch(url, config)
       const data = await safeJson(response)
 
       if (!response.ok) {
-        const detail = data?.message || data?.error || response.statusText
+        const detail = data?.detail || data?.message || data?.error || response.statusText
         throw new Error(`${response.status} ${detail}`)
       }
 
@@ -76,11 +98,23 @@ function normalizeResultRows(payload) {
   }))
 }
 
+export async function checkBackendHealth(backendUrl) {
+  const base = getBaseUrl(backendUrl)
+  try {
+    const response = await fetch(`${base}/api/health`, { signal: AbortSignal.timeout(5000) })
+    if (!response.ok) return null
+    return await response.json()
+  } catch {
+    return null
+  }
+}
+
 export async function uploadPdfToBackend({ baseUrl, file }) {
+  const base = getBaseUrl(baseUrl)
   const formData = new FormData()
   formData.append('file', file)
 
-  const payload = await requestWithFallback(baseUrl, UPLOAD_ENDPOINTS, {
+  const payload = await requestWithFallback(base, UPLOAD_ENDPOINTS, {
     method: 'POST',
     body: formData
   })
@@ -92,7 +126,8 @@ export async function uploadPdfToBackend({ baseUrl, file }) {
 }
 
 export async function runBackendSearch({ baseUrl, query, mode, topK }) {
-  const payload = await requestWithFallback(baseUrl, SEARCH_ENDPOINTS, {
+  const base = getBaseUrl(baseUrl)
+  const payload = await requestWithFallback(base, SEARCH_ENDPOINTS, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -106,7 +141,8 @@ export async function runBackendSearch({ baseUrl, query, mode, topK }) {
 }
 
 export async function runBackendRagAnswer({ baseUrl, query, provider, topK, apiKey }) {
-  const payload = await requestWithFallback(baseUrl, LLM_ENDPOINTS, {
+  const base = getBaseUrl(baseUrl)
+  const payload = await requestWithFallback(base, LLM_ENDPOINTS, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
