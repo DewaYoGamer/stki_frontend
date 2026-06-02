@@ -3,40 +3,7 @@ import { SEARCH_OPTIONS, scoreToPercent } from '../lib/utils'
 
 const EASING = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
-const RECOMMENDATIONS = [
-  {
-    q: 'Berapa tarif PPh final untuk UMKM dan bagaimana cara menghitungnya?',
-    topic: 'PPh Final',
-    icon: <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />,
-  },
-  {
-    q: 'Apa syarat dan cara mendaftarkan diri sebagai PKP untuk UMKM?',
-    topic: 'PKP',
-    icon: <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />,
-  },
-  {
-    q: 'Apa saja insentif dan fasilitas pajak yang bisa dimanfaatkan UMKM?',
-    topic: 'Insentif',
-    icon: <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />,
-  },
-  {
-    q: 'Bagaimana tata cara pelaporan SPT Tahunan bagi UMKM perseorangan?',
-    topic: 'Pelaporan SPT',
-    icon: <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />,
-  },
-  {
-    q: 'Berapa batas omzet UMKM yang dikenai pajak dan yang mendapat pembebasan?',
-    topic: 'Omzet & Batas',
-    icon: <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-14a3 3 0 00-3 3 1 1 0 102 0 1 1 0 011-1 1 1 0 110 2 1 1 0 00-1 1v1a1 1 0 102 0v-.268A3 3 0 0011 4zm-1 9a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />,
-  },
-  {
-    q: 'Apa perbedaan UMKM berbadan hukum dan tidak berbadan hukum dalam kewajiban pajak?',
-    topic: 'Badan Usaha',
-    icon: <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />,
-  },
-]
-
-const SUBTITLE = 'Temukan informasi perpajakan UMKM secara akurat — dari aturan PKP, PPh final, hingga insentif pajak untuk usaha Anda.'
+const DEFAULT_SUBTITLE = 'Upload dokumen PDF untuk memulai pencarian informasi secara akurat menggunakan berbagai metode retrieval.'
 
 function TypewriterText({ text, startDelay = 0, speed = 35, ready = true }) {
   const [displayed, setDisplayed] = useState('')
@@ -216,7 +183,13 @@ function ChatExchange({ message }) {
   )
 }
 
-function EmptyState({ onSuggest, ready }) {
+function EmptyState({ onSuggest, ready, suggestedQuestions = [], documentName = '', hasDocument = false }) {
+  const subtitle = hasDocument && documentName
+    ? `Dokumen "${documentName}" telah dimuat. Ajukan pertanyaan seputar isi dokumen atau pilih rekomendasi di bawah.`
+    : DEFAULT_SUBTITLE
+
+  const questionIcon = <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+
   return (
     <div className="flex flex-col items-center px-4 pt-7 pb-6 text-center sm:min-h-full sm:justify-center sm:px-6 sm:py-14">
 
@@ -233,63 +206,81 @@ function EmptyState({ onSuggest, ready }) {
         <h1 className="text-black/85 dark:text-white/90 text-[1.35rem] sm:text-[1.75rem] font-bold mb-1.5 mt-0 tracking-tight">
           TaxGuide
         </h1>
+        {hasDocument && documentName && (
+          <p className="text-[0.65rem] font-bold text-[#0e7a64] dark:text-[#4ecba5] bg-[#0e7a64]/10 dark:bg-[#0e7a64]/15 border border-[#0e7a64]/20 dark:border-[#0e7a64]/20 rounded-full px-3 py-1 mb-3 inline-flex items-center gap-1.5">
+            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" /></svg>
+            {documentName}
+          </p>
+        )}
         <p className="text-black/42 dark:text-white/30 text-[0.78rem] sm:text-[0.87rem] leading-[1.7] mb-5 sm:mb-10 max-w-[34ch] sm:max-w-[42ch] m-0">
-          <TypewriterText text={SUBTITLE} startDelay={400} speed={28} ready={ready} />
+          <TypewriterText text={subtitle} startDelay={400} speed={28} ready={ready} />
         </p>
       </div>
 
-      <div className="w-full max-w-2xl text-left" style={{ animation: `fadeIn 0.5s ${EASING} 0.25s both` }}>
-        <div className="flex items-center gap-2 mb-3">
-          <svg className="w-3 h-3 text-[#0e7a64]/50 dark:text-[#4ecba5]/40" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M11.983 1.907a.75.75 0 00-1.292-.657l-8.5 9.5A.75.75 0 002.75 12h6.572l-1.305 6.093a.75.75 0 001.292.657l8.5-9.5A.75.75 0 0017.25 8h-6.572l1.305-6.093z" />
-          </svg>
-          <span className="text-[0.58rem] font-extrabold uppercase tracking-[0.2em] text-black/28 dark:text-white/20">
-            Rekomendasi
-          </span>
-        </div>
+      {suggestedQuestions.length > 0 ? (
+        <div className="w-full max-w-2xl text-left" style={{ animation: `fadeIn 0.5s ${EASING} 0.25s both` }}>
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-3 h-3 text-[#0e7a64]/50 dark:text-[#4ecba5]/40" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M11.983 1.907a.75.75 0 00-1.292-.657l-8.5 9.5A.75.75 0 002.75 12h6.572l-1.305 6.093a.75.75 0 001.292.657l8.5-9.5A.75.75 0 0017.25 8h-6.572l1.305-6.093z" />
+            </svg>
+            <span className="text-[0.58rem] font-extrabold uppercase tracking-[0.2em] text-black/28 dark:text-white/20">
+              Rekomendasi dari Dokumen
+            </span>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-          {RECOMMENDATIONS.map((rec, i) => (
-            <button
-              key={rec.q}
-              onClick={() => onSuggest(rec.q)}
-              style={{ animation: `rise 0.5s ${EASING} ${0.28 + i * 0.07}s both` }}
-              className={`group flex flex-col text-left
-                gap-2 p-3 sm:gap-3 sm:p-4
-                rounded-xl sm:rounded-2xl
-                border border-black/[0.07] dark:border-white/[0.06]
-                bg-white dark:bg-white/[0.015]
-                hover:bg-[#0e7a64]/[0.05] dark:hover:bg-[#0e7a64]/[0.07]
-                hover:border-[#0e7a64]/25 dark:hover:border-[#0e7a64]/25
-                hover:shadow-[0_4px_20px_rgba(14,122,100,0.1)] dark:hover:shadow-[0_4px_24px_rgba(14,122,100,0.12)]
-                shadow-sm dark:shadow-none
-                transition-all duration-300 ease-out
-                ${i >= 3 ? 'hidden sm:flex' : 'flex'}`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#0e7a64]/10 dark:bg-[#0e7a64]/10 border border-[#0e7a64]/15 dark:border-[#0e7a64]/12 flex items-center justify-center shrink-0 group-hover:bg-[#0e7a64]/18 dark:group-hover:bg-[#0e7a64]/22 group-hover:border-[#0e7a64]/28 dark:group-hover:border-[#0e7a64]/30 transition-all duration-300">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0e7a64]/65 dark:text-[#4ecba5]/55 group-hover:text-[#0e7a64] dark:group-hover:text-[#4ecba5] transition-colors duration-300" viewBox="0 0 20 20" fill="currentColor">
-                    {rec.icon}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+            {suggestedQuestions.map((q, i) => (
+              <button
+                key={q}
+                onClick={() => onSuggest(q)}
+                style={{ animation: `rise 0.5s ${EASING} ${0.28 + i * 0.07}s both` }}
+                className={`group flex flex-col text-left
+                  gap-2 p-3 sm:gap-3 sm:p-4
+                  rounded-xl sm:rounded-2xl
+                  border border-black/[0.07] dark:border-white/[0.06]
+                  bg-white dark:bg-white/[0.015]
+                  hover:bg-[#0e7a64]/[0.05] dark:hover:bg-[#0e7a64]/[0.07]
+                  hover:border-[#0e7a64]/25 dark:hover:border-[#0e7a64]/25
+                  hover:shadow-[0_4px_20px_rgba(14,122,100,0.1)] dark:hover:shadow-[0_4px_24px_rgba(14,122,100,0.12)]
+                  shadow-sm dark:shadow-none
+                  transition-all duration-300 ease-out
+                  ${i >= 3 ? 'hidden sm:flex' : 'flex'}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#0e7a64]/10 dark:bg-[#0e7a64]/10 border border-[#0e7a64]/15 dark:border-[#0e7a64]/12 flex items-center justify-center shrink-0 group-hover:bg-[#0e7a64]/18 dark:group-hover:bg-[#0e7a64]/22 group-hover:border-[#0e7a64]/28 dark:group-hover:border-[#0e7a64]/30 transition-all duration-300">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0e7a64]/65 dark:text-[#4ecba5]/55 group-hover:text-[#0e7a64] dark:group-hover:text-[#4ecba5] transition-colors duration-300" viewBox="0 0 20 20" fill="currentColor">
+                      {questionIcon}
+                    </svg>
+                  </div>
+                  <span className="text-[0.55rem] sm:text-[0.58rem] font-extrabold uppercase tracking-wider text-black/28 dark:text-white/18 group-hover:text-[#0e7a64]/70 dark:group-hover:text-[#4ecba5]/55 px-2 py-0.5 rounded-full bg-black/[0.05] dark:bg-white/[0.03] border border-black/[0.07] dark:border-white/[0.05] group-hover:bg-[#0e7a64]/10 dark:group-hover:bg-[#0e7a64]/10 group-hover:border-[#0e7a64]/20 dark:group-hover:border-[#0e7a64]/18 transition-all duration-300 shrink-0">
+                    #{String(i + 1).padStart(2, '0')}
+                  </span>
+                </div>
+
+                <p className="text-black/52 dark:text-white/45 text-[0.78rem] sm:text-[0.82rem] font-medium leading-snug group-hover:text-black/78 dark:group-hover:text-white/78 transition-colors duration-300 m-0 flex-1">
+                  {q}
+                </p>
+
+                <div className="hidden sm:flex justify-end">
+                  <svg className="w-3.5 h-3.5 text-black/15 dark:text-white/12 group-hover:text-[#0e7a64]/50 dark:group-hover:text-[#4ecba5]/45 group-hover:translate-x-1 transition-all duration-300" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <span className="text-[0.55rem] sm:text-[0.58rem] font-extrabold uppercase tracking-wider text-black/28 dark:text-white/18 group-hover:text-[#0e7a64]/70 dark:group-hover:text-[#4ecba5]/55 px-2 py-0.5 rounded-full bg-black/[0.05] dark:bg-white/[0.03] border border-black/[0.07] dark:border-white/[0.05] group-hover:bg-[#0e7a64]/10 dark:group-hover:bg-[#0e7a64]/10 group-hover:border-[#0e7a64]/20 dark:group-hover:border-[#0e7a64]/18 transition-all duration-300 shrink-0">
-                  {rec.topic}
-                </span>
-              </div>
-
-              <p className="text-black/52 dark:text-white/45 text-[0.78rem] sm:text-[0.82rem] font-medium leading-snug group-hover:text-black/78 dark:group-hover:text-white/78 transition-colors duration-300 m-0 flex-1">
-                {rec.q}
-              </p>
-
-              <div className="hidden sm:flex justify-end">
-                <svg className="w-3.5 h-3.5 text-black/15 dark:text-white/12 group-hover:text-[#0e7a64]/50 dark:group-hover:text-[#4ecba5]/45 group-hover:translate-x-1 transition-all duration-300" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </button>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="w-full max-w-md text-center" style={{ animation: `fadeIn 0.5s ${EASING} 0.25s both` }}>
+          <div className="rounded-2xl border border-black/[0.07] dark:border-white/[0.07] bg-black/[0.02] dark:bg-white/[0.02] p-6">
+            <svg className="w-8 h-8 text-black/15 dark:text-white/12 mx-auto mb-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+            <p className="text-[0.82rem] font-semibold text-black/40 dark:text-white/35 m-0 mb-1">Belum ada dokumen</p>
+            <p className="text-[0.72rem] text-black/28 dark:text-white/22 m-0">Upload dokumen PDF melalui menu pengaturan untuk memulai.</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -359,7 +350,7 @@ function ModeSelector({ searchMode, setSearchMode }) {
   )
 }
 
-export function ChatArea({ chatHistory, query, setQuery, loading, searchMode, setSearchMode, onSubmit, onToggleSidebar, isDark, onToggleTheme, splashDone }) {
+export function ChatArea({ chatHistory, query, setQuery, loading, searchMode, setSearchMode, onSubmit, onToggleSidebar, isDark, onToggleTheme, splashDone, suggestedQuestions = [], documentName = '', docStatus = {} }) {
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
 
@@ -427,7 +418,7 @@ export function ChatArea({ chatHistory, query, setQuery, loading, searchMode, se
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto flex flex-col">
         {chatHistory.length === 0 ? (
-          <EmptyState onSuggest={handleSuggest} ready={splashDone} />
+          <EmptyState onSuggest={handleSuggest} ready={splashDone} suggestedQuestions={suggestedQuestions} documentName={documentName} hasDocument={docStatus.loaded} />
         ) : (
           <div className="max-w-3xl mx-auto w-full px-3 py-5 sm:px-6 sm:py-8 space-y-8 sm:space-y-10">
             {chatHistory.map((msg) => (
@@ -454,7 +445,7 @@ export function ChatArea({ chatHistory, query, setQuery, loading, searchMode, se
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Tanyakan informasi perpajakan UMKM…"
+                placeholder={documentName ? `Tanyakan seputar ${documentName}…` : 'Tanyakan seputar dokumen Anda…'}
                 rows={2}
                 className="w-full bg-transparent text-black/78 dark:text-white/80 resize-none outline-none placeholder-black/22 dark:placeholder-white/18 text-[0.88rem] leading-relaxed"
               />

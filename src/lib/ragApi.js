@@ -6,6 +6,7 @@
 const SEARCH_ENDPOINTS = ['/api/search', '/search']
 const LLM_ENDPOINTS = ['/api/ask', '/ask']
 const UPLOAD_ENDPOINTS = ['/api/upload', '/upload']
+const SUGGESTIONS_ENDPOINTS = ['/api/suggestions']
 
 /**
  * Get the base URL for API requests.
@@ -121,7 +122,25 @@ export async function uploadPdfToBackend({ baseUrl, file }) {
 
   return {
     message: payload?.message || payload?.status || 'Dokumen berhasil diupload ke backend.',
+    suggested_questions: payload?.suggested_questions || [],
+    document_name: payload?.document_name || '',
     detail: payload
+  }
+}
+
+export async function fetchSuggestions(backendUrl) {
+  const base = getBaseUrl(backendUrl)
+  try {
+    const payload = await requestWithFallback(base, SUGGESTIONS_ENDPOINTS, {
+      method: 'GET',
+    })
+    return {
+      document_name: payload?.document_name || '',
+      suggested_questions: payload?.suggested_questions || [],
+      has_document: payload?.has_document || false,
+    }
+  } catch {
+    return null
   }
 }
 

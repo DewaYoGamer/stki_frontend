@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { runBackendRagAnswer, runBackendSearch, uploadPdfToBackend, checkBackendHealth } from './lib/ragApi'
+import { runBackendRagAnswer, runBackendSearch, uploadPdfToBackend, checkBackendHealth, fetchSuggestions } from './lib/ragApi'
 import { ChatArea } from './components/ChatArea'
 import { SettingsSidebar } from './components/SettingsSidebar'
 import { SplashScreen } from './components/SplashScreen'
@@ -49,6 +49,10 @@ function App() {
     checking: true,
   })
 
+  /* Dynamic suggestions from uploaded document */
+  const [suggestedQuestions, setSuggestedQuestions] = useState([])
+  const [documentName, setDocumentName] = useState('')
+
   /* Chat */
   const [chatHistory, setChatHistory] = useState([])
   const [query, setQuery] = useState('')
@@ -69,6 +73,20 @@ function App() {
           chunksCount: health.chunks_count,
           checking: false,
         })
+        if (health.document_name) {
+          setDocumentName(health.document_name)
+        }
+
+        // If documents are already loaded, fetch suggestions
+        if (health.index_loaded) {
+          const suggestionsData = await fetchSuggestions(backendUrl)
+          if (suggestionsData && suggestionsData.suggested_questions.length > 0) {
+            setSuggestedQuestions(suggestionsData.suggested_questions)
+            if (suggestionsData.document_name) {
+              setDocumentName(suggestionsData.document_name)
+            }
+          }
+        }
       } else {
         setDocStatus((prev) => ({ ...prev, checking: false }))
       }
@@ -84,6 +102,15 @@ function App() {
     try {
       const res = await uploadPdfToBackend({ baseUrl: backendUrl, file })
       setUploadMessage(res.message)
+
+      // Save dynamic suggestions from upload response
+      if (res.suggested_questions && res.suggested_questions.length > 0) {
+        setSuggestedQuestions(res.suggested_questions)
+      }
+      if (res.document_name) {
+        setDocumentName(res.document_name)
+      }
+
       // Refresh document status after upload
       const health = await checkBackendHealth(backendUrl)
       if (health) {
@@ -93,6 +120,9 @@ function App() {
           checking: false,
         })
       }
+
+      // Clear chat history when new document is uploaded
+      setChatHistory([])
     } catch (err) {
       setUploadMessage('Upload gagal: ' + err.message)
     } finally {
@@ -189,9 +219,13 @@ function App() {
         isDark={isDark}
         onToggleTheme={toggleTheme}
         splashDone={!splash}
+        suggestedQuestions={suggestedQuestions}
+        documentName={documentName}
+        docStatus={docStatus}
       />
     </div>
   )
 }
 
 export default App
+
