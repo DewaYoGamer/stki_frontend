@@ -30,30 +30,8 @@ function Sep() {
 }
 
 /* ── Document status banner ── */
-function DocumentStatus({ docStatus, selectedPdf, uploadMessage }) {
+function DocumentStatus({ docStatus, selectedPdf, uploadMessage, documentName }) {
   const isSuccess = uploadMessage && !uploadMessage.startsWith('Upload gagal')
-
-  // Currently uploading or just uploaded
-  if (isSuccess && selectedPdf) {
-    return (
-      <div className="rounded-xl border border-[#0e7a64]/20 dark:border-[#0e7a64]/25 bg-[#0e7a64]/[0.06] dark:bg-[#0e7a64]/[0.08] p-3 mb-1">
-        <div className="flex items-center gap-2 mb-1.5">
-          <svg className="w-4 h-4 text-[#0e7a64] dark:text-[#4ecba5] shrink-0" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-          </svg>
-          <span className="text-[0.72rem] font-bold text-[#0e7a64] dark:text-[#4ecba5]">Dokumen Aktif</span>
-        </div>
-        <p className="text-[0.7rem] font-semibold text-black/60 dark:text-white/55 m-0 truncate pl-6">
-          {selectedPdf.name}
-        </p>
-        {docStatus.chunksCount > 0 && (
-          <p className="text-[0.6rem] text-black/30 dark:text-white/22 m-0 mt-1 pl-6">
-            {docStatus.chunksCount} chunks terindex
-          </p>
-        )}
-      </div>
-    )
-  }
 
   // Backend already has documents loaded (from previous session or startup)
   if (docStatus.loaded && docStatus.chunksCount > 0) {
@@ -63,13 +41,15 @@ function DocumentStatus({ docStatus, selectedPdf, uploadMessage }) {
           <svg className="w-4 h-4 text-[#0e7a64] dark:text-[#4ecba5] shrink-0" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
           </svg>
-          <span className="text-[0.72rem] font-bold text-[#0e7a64] dark:text-[#4ecba5]">Dokumen Tersedia</span>
+          <span className="text-[0.72rem] font-bold text-[#0e7a64] dark:text-[#4ecba5]">Dokumen Aktif</span>
         </div>
-        <p className="text-[0.6rem] text-black/30 dark:text-white/22 m-0 pl-6">
-          {docStatus.chunksCount} chunks terindex di server
-        </p>
-        <p className="text-[0.58rem] text-black/22 dark:text-white/15 m-0 mt-1 pl-6">
-          Upload file baru untuk mengganti dokumen
+        <div className="max-h-24 overflow-y-auto pl-6 pr-1 custom-scrollbar">
+          <p className="text-[0.7rem] font-semibold text-black/60 dark:text-white/55 m-0 leading-relaxed break-all">
+            {documentName || (selectedPdf ? selectedPdf.name : 'Dokumen')}
+          </p>
+        </div>
+        <p className="text-[0.6rem] text-black/30 dark:text-white/22 m-0 mt-1.5 pl-6">
+          {docStatus.chunksCount} chunks terindex
         </p>
       </div>
     )
@@ -176,11 +156,13 @@ export function SettingsSidebar({
   uploading,
   uploadMessage,
   onFileSelect,
+  onResetDocuments,
   searchMode, setSearchMode,
   openAiKey, setOpenAiKey,
   topK, setTopK,
   loading,
   docStatus,
+  documentName,
 }) {
   const [dragging, setDragging] = useState(false)
 
@@ -256,7 +238,21 @@ export function SettingsSidebar({
           <Tag>Dokumen</Tag>
 
           {/* Document status banner */}
-          <DocumentStatus docStatus={docStatus} selectedPdf={selectedPdf} uploadMessage={uploadMessage} />
+          <DocumentStatus docStatus={docStatus} selectedPdf={selectedPdf} uploadMessage={uploadMessage} documentName={documentName} />
+
+          {/* Reset Dokumen Button */}
+          {docStatus.loaded && (
+            <button
+              onClick={onResetDocuments}
+              disabled={uploading || loading}
+              className="mt-2 w-full py-2.5 px-3 border border-red-500/20 bg-red-500/[0.04] hover:bg-red-500/[0.08] active:bg-red-500/[0.12] text-red-600 dark:text-red-400 font-semibold text-[0.72rem] rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-[0_0_12px_rgba(239,68,68,0.1)] active:scale-[0.98]"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.842 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.74-2.533l.842-10.518.149.022a.75.75 0 00.23-1.482 41.03 41.03 0 00-2.365-.298V3.75A2.75 2.75 0 0011.25 1h-2.5zM8 3.75A1.25 1.25 0 019.25 2.5h1.5A1.25 1.25 0 0112 3.75v.293H8v-.293zM9.03 8.22a.75.75 0 00-1.06 1.06L9.44 10.75l-1.47 1.47a.75.75 0 101.06 1.06l1.47-1.47 1.47 1.47a.75.75 0 101.06-1.06L11.56 10.75l1.47-1.47a.75.75 0 00-1.06-1.06L10.5 9.69 9.03 8.22z" clipRule="evenodd" />
+              </svg>
+              Reset Dokumen
+            </button>
+          )}
 
           {/* Drop zone */}
           <div className="mb-1 mt-3">

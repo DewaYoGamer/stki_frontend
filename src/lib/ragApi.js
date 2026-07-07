@@ -179,3 +179,20 @@ export async function runBackendRagAnswer({ baseUrl, query, provider, topK, apiK
     references
   }
 }
+
+export async function resetBackendDocuments(backendUrl) {
+  const base = getBaseUrl(backendUrl)
+  try {
+    const payload = await requestWithFallback(base, ['/api/reset', '/reset'], {
+      method: 'POST',
+    })
+    return {
+      status: payload?.status || 'ok',
+      index_loaded: payload?.index_loaded || false,
+      chunks_count: payload?.chunks_count || 0,
+      document_name: payload?.document_name || '',
+    }
+  } catch (error) {
+    throw new Error('Gagal mereset dokumen: ' + error.message)
+  }
+}

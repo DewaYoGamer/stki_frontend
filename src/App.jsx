@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { runBackendRagAnswer, runBackendSearch, uploadPdfToBackend, checkBackendHealth, fetchSuggestions } from './lib/ragApi'
+import { runBackendRagAnswer, runBackendSearch, uploadPdfToBackend, checkBackendHealth, fetchSuggestions, resetBackendDocuments } from './lib/ragApi'
 import { ChatArea } from './components/ChatArea'
 import { SettingsSidebar } from './components/SettingsSidebar'
 import { SplashScreen } from './components/SplashScreen'
@@ -187,6 +187,30 @@ function App() {
     }
   }
 
+  async function handleResetDocuments() {
+    if (uploading || loading) return
+    try {
+      setUploading(true)
+      const res = await resetBackendDocuments(backendUrl)
+      if (res.status === 'ok') {
+        setSelectedPdf(null)
+        setUploadMessage('Dokumen berhasil di-reset.')
+        setSuggestedQuestions([])
+        setDocumentName('')
+        setChatHistory([])
+        setDocStatus({
+          loaded: false,
+          chunksCount: 0,
+          checking: false,
+        })
+      }
+    } catch (err) {
+      setUploadMessage('Gagal mereset dokumen: ' + err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <div className="h-dvh overflow-hidden">
       {splash && <SplashScreen onDone={() => setSplash(false)} />}
@@ -197,6 +221,7 @@ function App() {
         uploading={uploading}
         uploadMessage={uploadMessage}
         onFileSelect={handleFileSelect}
+        onResetDocuments={handleResetDocuments}
         searchMode={searchMode}
         setSearchMode={setSearchMode}
         openAiKey={openAiKey}
@@ -205,6 +230,7 @@ function App() {
         setTopK={setTopK}
         loading={loading}
         docStatus={docStatus}
+        documentName={documentName}
       />
       <ChatArea
         chatHistory={chatHistory}
